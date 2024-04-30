@@ -62,7 +62,7 @@ BEGIN
     END PROCESS;
 
     -- FSM logic
-    PROCESS (state, signal_running_reg, wrt_reg, reset_reg, signal_out, signal_in, interm_latch, count)  
+    PROCESS (state, signal_running_reg, wrt_reg, reset_reg, signal_out, signal_in, count)  
     BEGIN
 
         -- Default values
@@ -87,7 +87,6 @@ BEGIN
 
             WHEN WRITE_FIFO =>
                 IF count = 1 THEN
-                    address_next := address_reg + 1;
                     wrt_next <= '1';
                     next_state <= RST;
                 ELSE
@@ -98,6 +97,11 @@ BEGIN
             WHEN RST =>
                 IF signal_in = '1' or reset_reg = '1' THEN
                     IF reset_reg = '1' THEN
+                        IF address_reg = 65535 THEN
+                            address_next := (OTHERS => '0');
+                        ELSE
+                            address_next := address_reg + 1;
+                        END IF;
                         next_state <= IDLE;
                         signal_running_next <= '0';
                         reset_next <= '0';

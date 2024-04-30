@@ -128,10 +128,10 @@ ARCHITECTURE rtl OF channel IS
 
 BEGIN
 
-    sap_inst : sap
-    PORT MAP(
-        source => adders
-    );
+    --sap_inst : sap
+    --PORT MAP(
+    --    source => adders
+    --);
 
     memory_inst : memory
     PORT MAP(
@@ -142,7 +142,7 @@ BEGIN
         q => open
     );
 
-    clk_out <= clk;
+    --clk_out <= clk;
 
     -- send reset signal after start to all components
     handle_start_inst : handle_start
@@ -199,13 +199,13 @@ BEGIN
     signal_out <= bin_output;
 
     -- send binary output to UART
-    uart_inst : uart
-    PORT MAP(
-        clk => clk,
-        rst => reset_after_start,
-        we => wr_en,
-        din => bin_output,
-        tx => serial_out
-    );
+    --uart_inst : uart
+    --PORT MAP(
+    --    clk => clk,
+    --    rst => reset_after_start,
+    --    we => wr_en,
+    --    din => bin_output,
+    --    tx => serial_out
+    --);
         
 END ARCHITECTURE rtl;

@@ -4,3 +4,6 @@
 clock.*
 */
 *.rpt
+*.txt
+memory.*
+sap.*

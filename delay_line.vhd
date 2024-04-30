@@ -47,7 +47,7 @@ END delay_line;
 ARCHITECTURE rtl OF delay_line IS
 
     -- Raw output of TDL
-    SIGNAL unlatched_signal : STD_LOGIC_VECTOR(stages - 1 DOWNTO 0);
+    SIGNAL unlatched_signal : STD_LOGIC_VECTOR((stages/4) - 1 DOWNTO 0);
     SIGNAL sum : STD_LOGIC_VECTOR(stages - 1 DOWNTO 0);
     -- Output of first row of FlipFlops
     SIGNAL latched_once : STD_LOGIC_VECTOR(stages - 1 DOWNTO 0);
@@ -56,10 +56,10 @@ ARCHITECTURE rtl OF delay_line IS
 
     COMPONENT carry4
         PORT (
-            a, b : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
+            a, b : IN STD_LOGIC_VECTOR(127 DOWNTO 0);
             Cin : IN STD_LOGIC;
-            Cout_vector : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
-            Sum_vector : OUT STD_LOGIC_VECTOR(3 DOWNTO 0)
+            Cout : OUT STD_LOGIC;
+            Sum_vector : OUT STD_LOGIC_VECTOR(127 DOWNTO 0)
         );
     END COMPONENT;
 
@@ -85,34 +85,34 @@ BEGIN
     inverted <= NOT trigger;
 
     -- Instantiate the carry4 cells
-    carry_delay_line : FOR i IN 0 TO stages/4 - 1 GENERATE
+    --carry_delay_line : FOR i IN 0 TO stages/4 - 1 GENERATE
 
         -- First cell in the chain. Seperated as it takes the trigger signal as input
-        first_carry4 : IF i = 0 GENERATE
-        BEGIN
+        --first_carry4 : IF i = 0 GENERATE
+        --BEGIN
             delayblock : carry4
             PORT MAP(
-                a => zeros(3 DOWNTO 0),
-                b => ones(3 DOWNTO 0),
+                a => x"00000000000000000000000000000000", --zeros(3 DOWNTO 0),
+                b => x"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", --ones(3 DOWNTO 0),
                 Cin => inverted,
-                Cout_vector => unlatched_signal(3 DOWNTO 0),
-                Sum_vector => sum(3 DOWNTO 0)
+                Cout => unlatched_signal(0),
+                Sum_vector => sum(127 DOWNTO 0)
             );
-        END GENERATE first_carry4;
+        --END GENERATE first_carry4;
 
         -- All other cells in the chain. Input of the carry4 cells is the carry-out of the previous cell
-        next_carry4 : IF i > 0 GENERATE
-        BEGIN
-            delayblock : carry4
-            PORT MAP(
-                a => zeros((4*(i+1)) - 1 DOWNTO (4*i)),
-                b => ones((4*(i+1)) - 1 DOWNTO (4*i)),
-                Cin => unlatched_signal((4 * i) - 1),
-                Cout_vector => unlatched_signal((4 * (i + 1)) - 1 DOWNTO (4 * i)),
-                Sum_vector => sum((4 * (i + 1)) - 1 DOWNTO (4 * i))
-            );
-        END GENERATE next_carry4;
-    END GENERATE;
+        --next_carry4 : IF i > 0 GENERATE
+        --BEGIN
+        --    delayblock : carry4
+        --    PORT MAP(
+        --        a => "0000", --zeros((4*(i+1)) - 1 DOWNTO (4*i)),
+        --        b => "1111", --ones((4*(i+1)) - 1 DOWNTO (4*i)),
+        --        Cin => unlatched_signal(i-1),
+        --        Cout => unlatched_signal(i),
+        --        Sum_vector => sum((4 * (i + 1)) - 1 DOWNTO (4 * i))
+        --    );
+        --END GENERATE next_carry4;
+    --END GENERATE;
 
     -- Instantiate the FlipFlops
     latch_1 : FOR i IN 0 TO stages - 1 GENERATE
