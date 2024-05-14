@@ -1,3 +1,4 @@
+
 -- Thermometer to binary encoder
 --
 -- Inputs:
@@ -18,30 +19,62 @@ ENTITY encoder IS
     );
     PORT (
         clk : IN STD_LOGIC;
+        start_count : IN STD_LOGIC;
         thermometer : IN STD_LOGIC_VECTOR((n_bits_therm - 1) DOWNTO 0);
+        finished_count : OUT STD_LOGIC;
         count_bin : OUT STD_LOGIC_VECTOR((n_bits_bin - 1) DOWNTO 0)
     );
 END ENTITY encoder;
 
 
 ARCHITECTURE rtl OF encoder IS
+
+    SIGNAL first : unsigned(n_bits_bin - 1 DOWNTO 0);
+    SIGNAL second : unsigned(n_bits_bin - 1 DOWNTO 0);
+
 BEGIN
 
     PROCESS (clk)
         -- Variable to store the count
         VARIABLE count : unsigned(n_bits_bin - 1 DOWNTO 0); --:= (OTHERS => '0');
+        VARIABLE zeros : INTEGER := 0;
     BEGIN
+        count := (OTHERS => '0');
+        finished_count <= '1';
         -- Simply loop over the thermometer code and count the number of '1's
+        IF rising_edge(clk) THEN    
+            --IF start_count = '1' THEN 
+                FOR i IN 0 TO 255 LOOP
+                    IF thermometer(i) = '0' THEN
+                        count := count + 1;
+                    END IF;
+                END LOOP;
+                first <= count;
+        END IF;
+    END PROCESS;
+
+    PROCESS (clk)
+    -- Variable to store the count
+        VARIABLE count : unsigned(n_bits_bin - 1 DOWNTO 0); --:= (OTHERS => '0');
+    
+    BEGIN
+        count := (OTHERS => '0');
+        -- Simply loop over the thermometer code and count the number of '1's
+        IF rising_edge(clk) THEN    
+            --IF start_count = '1' THEN 
+                FOR i IN 256 TO 511 LOOP
+                    IF thermometer(i) = '0' THEN
+                        count := count + 1;
+                    END IF;
+                END LOOP;
+                second <= count;
+        END IF;
+    END PROCESS;
+
+    PROCESS(clk)
+    BEGIN
         IF rising_edge(clk) THEN
-            -- Reset the count after each clock cycle
-            count := (OTHERS => '0');
-            FOR i IN 0 TO n_bits_therm - 1 LOOP
-                IF thermometer(i) = '1' THEN
-                    count := count + 1;
-                END IF;
-            END LOOP;
-            -- Assign the count to the output
-            count_bin <= STD_LOGIC_VECTOR(count);
+            count_bin <= STD_LOGIC_VECTOR(first + second);
         END IF;
     END PROCESS;
 
