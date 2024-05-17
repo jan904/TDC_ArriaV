@@ -45,7 +45,7 @@ BEGIN
         IF rising_edge(clk) THEN    
             --IF start_count = '1' THEN 
                 FOR i IN 0 TO 255 LOOP
-                    IF thermometer(i) = '0' THEN
+                    IF thermometer(i) = '1' THEN
                         count := count + 1;
                     END IF;
                 END LOOP;
@@ -63,7 +63,7 @@ BEGIN
         IF rising_edge(clk) THEN    
             --IF start_count = '1' THEN 
                 FOR i IN 256 TO 511 LOOP
-                    IF thermometer(i) = '0' THEN
+                    IF thermometer(i) = '1' THEN
                         count := count + 1;
                     END IF;
                 END LOOP;

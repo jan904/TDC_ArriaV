@@ -49,18 +49,18 @@ ARCHITECTURE rtl OF channel IS
 
     component pll is
 		port (
-			refclk   : in  std_logic := 'X'; -- clk
+			refclk   : in  std_logic; -- clk
 			rst      : in  std_logic := 'X'; -- reset
 			outclk_0 : out std_logic         -- clk
 		);
 	end component pll;
 
 
-    COMPONENT sap IS
-        PORT (
-            source : OUT STD_LOGIC_VECTOR(255 DOWNTO 0)
-        );
-    END COMPONENT sap;
+    --COMPONENT sap IS
+    --    PORT (
+    --        source : OUT STD_LOGIC_VECTOR(255 DOWNTO 0)
+    --    );
+    --END COMPONENT sap;
 
 
     COMPONENT delay_line IS
@@ -150,14 +150,14 @@ BEGIN
     pll_inst : pll
     port map (
         refclk => clk,
-        rst => '0',
+        rst => reset_after_start,
         outclk_0 => pll_clock
     );
 
     memory_inst : memory
     PORT MAP(
         address => address,
-        clock => clk,
+        clock => pll_clock,
         data => bin_output(9 DOWNTO 2),
         wren => wr_en,
         q => open
@@ -166,7 +166,7 @@ BEGIN
     -- send reset signal after start to all components
     handle_start_inst : handle_start
     PORT MAP(
-        clk => clk,
+        clk => pll_clock,
         starting => reset_after_start
     );
 
@@ -179,7 +179,7 @@ BEGIN
         reset => reset_after_signal,
         signal_running => busy,
         trigger => signal_in,
-        clock => clk,
+        clock => pll_clock,
         zeros => adders((8*carry4_count)-1 DOWNTO (4*carry4_count)),
         ones => adders((4*carry4_count)-1 DOWNTO 0),
         intermediate_signal => detect_edge,
@@ -193,7 +193,7 @@ BEGIN
         n_output_bits => n_output_bits
     )
     PORT MAP(
-        clock => clk,
+        clock => pll_clock,
         start => reset_after_start,
         signal_in => signal_in,
         interm_latch => detect_edge,
@@ -212,7 +212,7 @@ BEGIN
         n_bits_therm => 4 * carry4_count
     )
     PORT MAP(
-        clk => clk,
+        clk => pll_clock,
         start_count => busy,
         thermometer => therm_code,
         finished_count => encode_done,

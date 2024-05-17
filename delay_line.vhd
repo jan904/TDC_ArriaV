@@ -94,7 +94,7 @@ BEGIN
     PORT MAP(
         a => (OTHERS => '0'), --x"00000000000000000000000000000000", --zeros(3 DOWNTO 0),
         b => (OTHERS => '1'), --x"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", --ones(3 DOWNTO 0),
-        Cin => inverted,
+        Cin => trigger,
         Cout => unlatched_signal(0),
         Sum_vector => sum(stages-1 DOWNTO 0)
     );
@@ -109,7 +109,7 @@ BEGIN
             rst => reset,
             lock => signal_running,
             clk => clock,
-            t => sum(i),
+            t => not sum(i),
             q => latched_once(i)
         );
 

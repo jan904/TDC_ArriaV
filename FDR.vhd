@@ -35,7 +35,7 @@ BEGIN
     BEGIN
         -- Set output to 0 on reset
         IF rst = '1' THEN
-            q <= '1';
+            q <= '0';
         -- Update output on rising edge of clock if not locked
         ELSIF clk'event AND clk = '1' THEN
             IF lock = '0' THEN
