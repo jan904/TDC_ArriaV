@@ -85,13 +85,13 @@ BEGIN
         CASE state IS
             WHEN IDLE =>
                 IF start_idle = '1' THEN
-                    IF signal_in = '0' THEN
+                    IF signal_in = '1' THEN
                         next_state <= DETECT_START;
                         start_idle_next <= '0';
                     ELSE
                         next_state <= IDLE;
                     END IF;
-                ELSIF signal_in = '1' THEN
+                ELSIF signal_in = '0' THEN
                     next_state <= IDLE;
                     start_idle_next <= '1';
                 ELSE
@@ -121,8 +121,8 @@ BEGIN
                 END IF;
 
             WHEN RST =>
-                IF signal_in = '1' or reset_reg = '1' THEN
-                    IF reset_reg = '1' and signal_in = '1' THEN
+                IF signal_in = '0' or reset_reg = '1' THEN
+                    IF reset_reg = '1' and signal_in = '0' THEN
                         IF address_reg = 65535 THEN
                             address_next := (OTHERS => '0');
                         ELSE

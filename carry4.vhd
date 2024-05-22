@@ -20,7 +20,9 @@ ENTITY carry4 IS
         stages : INTEGER := 4
     );
     PORT (
-        a, b : IN STD_LOGIC_VECTOR(stages-1 DOWNTO 0);
+        clk : IN STD_LOGIC;
+        rst : IN STD_LOGIC;
+        lock : IN STD_LOGIC;
         Cin : IN STD_LOGIC;
         Cout : OUT STD_LOGIC;
         Sum_vector : OUT STD_LOGIC_VECTOR(stages-1 DOWNTO 0)
@@ -29,26 +31,44 @@ END ENTITY carry4;
 
 ARCHITECTURE rtl OF carry4 IS
 
-    --SIGNAL carry : STD_LOGIC_VECTOR(4 DOWNTO 0);
-    SIGNAL output : STD_LOGIC_VECTOR(1 DOWNTO 0);
-
-
-    COMPONENT full_add IS
-        PORT (
-            a : IN STD_LOGIC;
-            b : IN STD_LOGIC;
-            Cin : IN STD_LOGIC;
-            Cout : OUT STD_LOGIC;
-            Sum : OUT STD_LOGIC
-        );
-    END COMPONENT full_add;
-
     SIGNAL total : STD_LOGIC_VECTOR(stages DOWNTO 0);
+    SIGNAL interm : STD_LOGIC_VECTOR(stages-1 DOWNTO 0);
+
+    SIGNAL a, b : STD_LOGIC_VECTOR(stages-1 DOWNTO 0);
 
 BEGIN
 
+    a <= (OTHERS => '0');
+    b <= (OTHERS => '1');
+
     total <= std_logic_vector(resize(unsigned(a),stages+1) + resize(unsigned(b), stages+1) + unsigned'('0'&Cin));
-    Sum_vector <= total(stages-1 downto 0);
+    
+    PROCESS(clk, rst)
+    BEGIN
+        IF rst = '1' THEN
+            interm <= (OTHERS => '0');
+        ELSIF rising_edge(clk) THEN
+            FOR i IN 0 TO stages-1 LOOP
+                IF lock = '0' THEN
+                    interm(i) <= not total(i);
+                END IF;
+            END LOOP;
+        END IF;
+    END PROCESS;
+
+    PROCESS(clk, rst)
+    BEGIN
+        IF rst = '1' THEN
+            Sum_vector <= (OTHERS => '0');
+        ELSIF rising_edge(clk) THEN
+            FOR i IN 0 TO stages-1 LOOP
+                IF lock = '0' THEN
+                    Sum_vector(i) <= interm(i);
+                END IF;
+            END LOOP;
+        END IF;
+    END PROCESS;
+
     Cout <= total(stages);
 
 END ARCHITECTURE rtl;

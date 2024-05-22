@@ -58,7 +58,9 @@ ARCHITECTURE rtl OF delay_line IS
             stages : INTEGER := 4
         );
         PORT (
-            a, b : IN STD_LOGIC_VECTOR(stages-1 DOWNTO 0);
+            rst : IN STD_LOGIC;
+            lock : IN STD_LOGIC;
+            clk : IN STD_LOGIC;
             Cin : IN STD_LOGIC;
             Cout : OUT STD_LOGIC;
             Sum_vector : OUT STD_LOGIC_VECTOR(stages-1 DOWNTO 0)
@@ -92,39 +94,40 @@ BEGIN
         stages => stages
     )
     PORT MAP(
-        a => (OTHERS => '0'), --x"00000000000000000000000000000000", --zeros(3 DOWNTO 0),
-        b => (OTHERS => '1'), --x"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", --ones(3 DOWNTO 0),
+        clk => clock,
+        rst => reset,
+        lock => signal_running,
         Cin => trigger,
         Cout => unlatched_signal(0),
-        Sum_vector => sum(stages-1 DOWNTO 0)
+        Sum_vector => therm_code(stages-1 DOWNTO 0)
     );
 
     -- Instantiate the FlipFlops
-    latch_1 : FOR i IN 0 TO stages - 1 GENERATE
-    BEGIN
+    --latch_1 : FOR i IN 0 TO stages - 1 GENERATE
+    --BEGIN
 
         -- First row of FlipFlops
-        ff1 : fdr
-        PORT MAP(
-            rst => reset,
-            lock => signal_running,
-            clk => clock,
-            t => not sum(i),
-            q => latched_once(i)
-        );
+    --    ff1 : fdr
+    --    PORT MAP(
+    --        rst => reset,
+    --        lock => signal_running,
+    --        clk => clock,
+    --        t => not sum(i),
+    --        q => latched_once(i)
+    --    );
 
         -- Second row of FlipFlops
-        ff2 : fdr
-        PORT MAP(
-            rst => reset,
-            lock => signal_running,
-            clk => clock,
-            t => latched_once(i),
-            q => therm_code(i)
-        );
-    END GENERATE latch_1;
+    --    ff2 : fdr
+    --    PORT MAP(
+    --        rst => reset,
+    --        lock => signal_running,
+    --        clk => clock,
+    --        t => latched_once(i),
+    --        q => therm_code(i)
+    --    );
+    --END GENERATE latch_1;
 
     -- Map output of the first row of FlipFlops to the output. Used for detect signal logic.
-    intermediate_signal <= latched_once;
+    --intermediate_signal <= latched_once;
 
 END ARCHITECTURE rtl;
