@@ -11,9 +11,6 @@ ENTITY detect_signal IS
         clock : IN STD_LOGIC;
         start : IN STD_LOGIC;
         signal_in : IN STD_LOGIC;
-        interm_latch : IN STD_LOGIC_VECTOR(stages - 1 DOWNTO 0);
-        signal_out : IN STD_LOGIC_VECTOR(n_output_bits - 1 DOWNTO 0);
-        encode_done : IN STD_LOGIC;
         address : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
         signal_running : OUT STD_LOGIC;
         reset : OUT STD_LOGIC;
@@ -32,10 +29,9 @@ ARCHITECTURE fsm OF detect_signal IS
     SIGNAL reset_reg, reset_next : STD_LOGIC;
     SIGNAL signal_running_reg, signal_running_next : STD_LOGIC;
     SIGNAL wrt_reg, wrt_next : STD_LOGIC;
-    SIGNAL count, count_reg, count_next : INTEGER range 0 to 1;
+    SIGNAL count, count_next : INTEGER range 0 to 1;
     SIGNAL start_idle, start_idle_next : STD_LOGIC;
     SIGNAL wait_counter, wait_counter_next : INTEGER range 0 to 2;
-    SIGNAL done_write_reg, done_write_next : STD_LOGIC;
     SHARED VARIABLE address_reg, address_next : UNSIGNED(15 DOWNTO 0);
 
 BEGIN
@@ -69,7 +65,7 @@ BEGIN
     END PROCESS;
 
     -- FSM logic
-    PROCESS (state, signal_running_reg, wrt_reg, reset_reg, signal_out, signal_in, count, wait_counter, start_idle, encode_done)  
+    PROCESS (state, signal_running_reg, wrt_reg, reset_reg, signal_in, count, wait_counter, start_idle)  
     BEGIN
 
         -- Default values

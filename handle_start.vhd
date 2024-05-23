@@ -43,7 +43,7 @@ BEGIN
     END PROCESS;
 
     -- fsm logic
-    PROCESS (next_state, starting_reg, current_state)
+    PROCESS (starting_reg, current_state)
     BEGIN
         -- Go to reset_state after starting. Stay in reset_state for one cycle
         -- and send starting signal. Then go to running_state and stay there sending no signal.s

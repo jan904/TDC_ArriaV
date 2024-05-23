@@ -35,11 +35,7 @@ ARCHITECTURE rtl OF channel IS
     SIGNAL busy : STD_LOGIC;
     SIGNAL wr_en : STD_LOGIC;
     SIGNAL therm_code : STD_LOGIC_VECTOR(carry4_count * 4 - 1 DOWNTO 0);
-    SIGNAL detect_edge : STD_LOGIC_VECTOR(carry4_count * 4 - 1 DOWNTO 0);
     SIGNAL bin_output : STD_LOGIC_VECTOR(n_output_bits - 1 DOWNTO 0);
-    SIGNAL encode_done : STD_LOGIC;
-
-    SIGNAL adders : STD_LOGIC_VECTOR((8*carry4_count)-1 DOWNTO 0) := (OTHERS => '0');
 
     SIGNAL address : STD_LOGIC_VECTOR(15 DOWNTO 0) := (OTHERS => '0');
 
@@ -55,26 +51,17 @@ ARCHITECTURE rtl OF channel IS
 		);
 	end component pll;
 
-
-    --COMPONENT sap IS
-    --    PORT (
-    --        source : OUT STD_LOGIC_VECTOR(255 DOWNTO 0)
-    --    );
-    --END COMPONENT sap;
-
-
     COMPONENT delay_line IS
         GENERIC (
             stages : POSITIVE
         );
         PORT (
+            ones : IN STD_LOGIC_VECTOR(stages-1 DOWNTO 0);
+            zeros : IN STD_LOGIC_VECTOR(stages-1  DOWNTO 0);
             reset : IN STD_LOGIC;
             trigger : IN STD_LOGIC;
             clock : IN STD_LOGIC;
             signal_running : IN STD_LOGIC;
-            ones : IN STD_LOGIC_VECTOR(stages-1 DOWNTO 0);
-            zeros : IN STD_LOGIC_VECTOR(stages-1  DOWNTO 0);
-            intermediate_signal : OUT STD_LOGIC_VECTOR(stages - 1 DOWNTO 0);
             therm_code : OUT STD_LOGIC_VECTOR(stages - 1 DOWNTO 0)
         );
     END COMPONENT delay_line;
@@ -86,9 +73,7 @@ ARCHITECTURE rtl OF channel IS
         );
         PORT (
             clk : IN STD_LOGIC;
-            start_count : IN STD_LOGIC;
             thermometer : IN STD_LOGIC_VECTOR((n_bits_therm - 1) DOWNTO 0);
-            finished_count : OUT STD_LOGIC;
             count_bin : OUT STD_LOGIC_VECTOR(n_bits_bin - 1 DOWNTO 0)
         );
     END COMPONENT encoder;
@@ -102,25 +87,12 @@ ARCHITECTURE rtl OF channel IS
             clock : IN STD_LOGIC;
             start : IN STD_LOGIC;
             signal_in : IN STD_LOGIC;
-            interm_latch : IN STD_LOGIC_VECTOR(stages - 1 DOWNTO 0);
-            signal_out : IN STD_LOGIC_VECTOR(n_output_bits - 1 DOWNTO 0);
-            encode_done : IN STD_LOGIC;
             signal_running : OUT STD_LOGIC;
             address : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
             reset : OUT STD_LOGIC;
             wrt : OUT STD_LOGIC
         );
     END COMPONENT detect_signal;
-
-    COMPONENT uart IS
-        PORT (
-            clk : IN STD_LOGIC;
-            rst : IN STD_LOGIC;
-            we : IN STD_LOGIC;
-            din : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-            tx : OUT STD_LOGIC
-        );
-    END COMPONENT uart;
 
     COMPONENT handle_start IS
         PORT (
@@ -140,12 +112,9 @@ ARCHITECTURE rtl OF channel IS
         );
     end component;
 
-BEGIN
+    SIGNAL adders : STD_LOGIC_VECTOR((8*carry4_count)-1 DOWNTO 0) := (OTHERS => '0');
 
-    --sap_inst : sap
-    --PORT MAP(
-    --    source => adders
-    --);
+BEGIN
 
     pll_inst : pll
     port map (
@@ -157,7 +126,7 @@ BEGIN
     memory_inst : memory
     PORT MAP(
         address => address,
-        clock => pll_clock,
+        clock => clk,
         data => bin_output(7 DOWNTO 0),
         wren => wr_en,
         q => open
@@ -166,7 +135,7 @@ BEGIN
     -- send reset signal after start to all components
     handle_start_inst : handle_start
     PORT MAP(
-        clk => pll_clock,
+        clk => clk,
         starting => reset_after_start
     );
 
@@ -179,10 +148,9 @@ BEGIN
         reset => reset_after_signal,
         signal_running => busy,
         trigger => signal_in,
-        clock => pll_clock,
+        clock => clk,
         zeros => adders((8*carry4_count)-1 DOWNTO (4*carry4_count)),
         ones => adders((4*carry4_count)-1 DOWNTO 0),
-        intermediate_signal => detect_edge,
         therm_code => therm_code
     );
 	 
@@ -193,12 +161,9 @@ BEGIN
         n_output_bits => n_output_bits
     )
     PORT MAP(
-        clock => pll_clock,
+        clock => clk,
         start => reset_after_start,
         signal_in => signal_in,
-        interm_latch => detect_edge,
-        signal_out => bin_output,
-        encode_done => encode_done,
         signal_running => busy,
         reset => reset_after_signal,
         address => address,
@@ -212,10 +177,8 @@ BEGIN
         n_bits_therm => 4 * carry4_count
     )
     PORT MAP(
-        clk => pll_clock,
-        start_count => busy,
+        clk => clk,
         thermometer => therm_code,
-        finished_count => encode_done,
         count_bin => bin_output
     );
     signal_out <= bin_output;
