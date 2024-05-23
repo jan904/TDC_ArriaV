@@ -32,13 +32,27 @@ END ENTITY carry4;
 
 ARCHITECTURE rtl OF carry4 IS
 
+    --SIGNAL carry : STD_LOGIC_VECTOR(4 DOWNTO 0);
+    SIGNAL output : STD_LOGIC_VECTOR(1 DOWNTO 0);
+
+
+    COMPONENT full_add IS
+        PORT (
+            a : IN STD_LOGIC;
+            b : IN STD_LOGIC;
+            Cin : IN STD_LOGIC;
+            Cout : OUT STD_LOGIC;
+            Sum : OUT STD_LOGIC
+        );
+    END COMPONENT full_add;
+
     SIGNAL total : STD_LOGIC_VECTOR(stages DOWNTO 0);
     SIGNAL interm : STD_LOGIC_VECTOR(stages-1 DOWNTO 0);
 
 BEGIN
 
     total <= std_logic_vector(resize(unsigned(a),stages+1) + resize(unsigned(b), stages+1) + unsigned'('0'&Cin));
-    
+
     PROCESS(clk, rst)
     BEGIN
         IF rst = '1' THEN
@@ -46,7 +60,7 @@ BEGIN
         ELSIF rising_edge(clk) THEN
             FOR i IN 0 TO stages-1 LOOP
                 IF lock = '0' THEN
-                    interm(i) <= not total(i);
+                    interm(i) <= total(i);
                 END IF;
             END LOOP;
         END IF;
@@ -64,7 +78,7 @@ BEGIN
             END LOOP;
         END IF;
     END PROCESS;
-
-    --Cout <= total(stages);
+    
+    Cout <= total(stages);
 
 END ARCHITECTURE rtl;

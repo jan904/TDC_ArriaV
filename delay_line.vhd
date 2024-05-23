@@ -31,11 +31,12 @@ ENTITY delay_line IS
         stages : INTEGER := 8
     );
     PORT (
-        ones, zeros : IN STD_LOGIC_VECTOR(stages-1 DOWNTO 0);
         reset : IN STD_LOGIC;
         trigger : IN STD_LOGIC;
         clock : IN STD_LOGIC;
         signal_running : IN STD_LOGIC;
+        ones : IN STD_LOGIC_VECTOR(stages-1 DOWNTO 0);
+        zeros : IN STD_LOGIC_VECTOR(stages-1 DOWNTO 0);
         intermediate_signal : OUT STD_LOGIC_VECTOR(stages - 1 DOWNTO 0);
         therm_code : OUT STD_LOGIC_VECTOR(stages - 1 DOWNTO 0)
     );
@@ -44,29 +45,49 @@ END delay_line;
 
 ARCHITECTURE rtl OF delay_line IS
 
+    -- Raw output of TDL
     SIGNAL unlatched_signal : STD_LOGIC_VECTOR((stages/4) - 1 DOWNTO 0);
+    SIGNAL sum : STD_LOGIC_VECTOR(stages - 1 DOWNTO 0);
+    -- Output of first row of FlipFlops
+    SIGNAL latched_once : STD_LOGIC_VECTOR(stages - 1 DOWNTO 0);
+    -- Inverted trigger signal
+    SIGNAL inverted : STD_LOGIC;
 
     COMPONENT carry4
         GENERIC (
             stages : INTEGER := 4
         );
         PORT (
-            a, b : IN STD_LOGIC_VECTOR(stages-1 DOWNTO 0);
+            clk : IN STD_LOGIC;
             rst : IN STD_LOGIC;
             lock : IN STD_LOGIC;
-            clk : IN STD_LOGIC;
+            a, b : IN STD_LOGIC_VECTOR(stages-1 DOWNTO 0);
             Cin : IN STD_LOGIC;
             Cout : OUT STD_LOGIC;
             Sum_vector : OUT STD_LOGIC_VECTOR(stages-1 DOWNTO 0)
         );
     END COMPONENT;
-	
-    --ATTRIBUTE keep : boolean;
-    --ATTRIBUTE keep OF unlatched_signal : SIGNAL IS TRUE;
-    --ATTRIBUTE keep OF ones : SIGNAL IS TRUE;
-    --ATTRIBUTE keep OF zeros : SIGNAL IS TRUE;
 
+    COMPONENT fdr
+        PORT (
+            rst : IN STD_LOGIC;
+            clk : IN STD_LOGIC;
+            lock : IN STD_LOGIC;
+            t : IN STD_LOGIC;
+            q : OUT STD_LOGIC
+        );
+    END COMPONENT;
+	
+    -- Keep attribute to prevent synthesis tool from optimizing away the signals
+	ATTRIBUTE keep : boolean;
+    ATTRIBUTE keep OF unlatched_signal : SIGNAL IS TRUE;
+    ATTRIBUTE keep OF ones : SIGNAL IS TRUE;
+    ATTRIBUTE keep OF zeros : SIGNAL IS TRUE;
+	
 BEGIN
+
+    -- Invert the trigger signal so the TDL is triggered on a falling edge
+    inverted <= NOT trigger;
 
     -- Instantiate the carry4 cells
     delayblock : carry4
@@ -74,14 +95,42 @@ BEGIN
         stages => stages
     )
     PORT MAP(
-        a => (OTHERS => '0'),
-        b => (OTHERS => '1'),
         clk => clock,
         rst => reset,
         lock => signal_running,
+        a => (OTHERS => '0'), --x"00000000000000000000000000000000", --zeros(3 DOWNTO 0),
+        b => (OTHERS => '1'), --x"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", --ones(3 DOWNTO 0),
         Cin => trigger,
         Cout => unlatched_signal(0),
-        Sum_vector => therm_code(stages-1 DOWNTO 0)
+        Sum_vector => sum(stages-1 DOWNTO 0)
     );
+
+    -- Instantiate the FlipFlops
+    latch_1 : FOR i IN 0 TO stages - 1 GENERATE
+    BEGIN
+
+        -- First row of FlipFlops
+        ff1 : fdr
+        PORT MAP(
+            rst => reset,
+            lock => signal_running,
+            clk => clock,
+            t => not sum(i),
+            q => latched_once(i)
+        );
+
+        -- Second row of FlipFlops
+        ff2 : fdr
+        PORT MAP(
+            rst => reset,
+            lock => signal_running,
+            clk => clock,
+            t => latched_once(i),
+            q => therm_code(i)
+        );
+    END GENERATE latch_1;
+
+    -- Map output of the first row of FlipFlops to the output. Used for detect signal logic.
+    intermediate_signal <= latched_once;
 
 END ARCHITECTURE rtl;
