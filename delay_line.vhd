@@ -102,33 +102,9 @@ BEGIN
         b => (OTHERS => '1'), --x"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", --ones(3 DOWNTO 0),
         Cin => trigger,
         Cout => unlatched_signal(0),
-        Sum_vector => sum(stages-1 DOWNTO 0)
+        Sum_vector => therm_code(stages-1 DOWNTO 0)
     );
 
-    -- Instantiate the FlipFlops
-    latch_1 : FOR i IN 0 TO stages - 1 GENERATE
-    BEGIN
-
-        -- First row of FlipFlops
-        ff1 : fdr
-        PORT MAP(
-            rst => reset,
-            lock => signal_running,
-            clk => clock,
-            t => not sum(i),
-            q => latched_once(i)
-        );
-
-        -- Second row of FlipFlops
-        ff2 : fdr
-        PORT MAP(
-            rst => reset,
-            lock => signal_running,
-            clk => clock,
-            t => latched_once(i),
-            q => therm_code(i)
-        );
-    END GENERATE latch_1;
 
     -- Map output of the first row of FlipFlops to the output. Used for detect signal logic.
     intermediate_signal <= latched_once;

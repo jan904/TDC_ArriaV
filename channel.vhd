@@ -158,7 +158,7 @@ BEGIN
     PORT MAP(
         address => address,
         clock => pll_clock,
-        data => bin_output(9 DOWNTO 2),
+        data => bin_output(7 DOWNTO 0),
         wren => wr_en,
         q => open
     );
