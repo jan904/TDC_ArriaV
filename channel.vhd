@@ -140,7 +140,14 @@ ARCHITECTURE rtl OF channel IS
         );
     end component;
 
+    --SIGNAL data : STD_LOGIC_VECTOR(7 DOWNTO 0); 
+
+    ATTRIBUTE keep : boolean;
+    --ATTRIBUTE keep OF therm_code : signal IS TRUE;
+
 BEGIN
+
+    --data <= bin_output(8 DOWNTO 1);
 
     --sap_inst : sap
     --PORT MAP(
@@ -158,7 +165,7 @@ BEGIN
     PORT MAP(
         address => address,
         clock => pll_clock,
-        data => bin_output(7 DOWNTO 0),
+        data => bin_output(8 DOWNTO 1),
         wren => wr_en,
         q => open
     );
@@ -218,6 +225,6 @@ BEGIN
         finished_count => encode_done,
         count_bin => bin_output
     );
-    signal_out <= bin_output;
+    --signal_out <= bin_output;
         
 END ARCHITECTURE rtl;

@@ -36,7 +36,7 @@ ARCHITECTURE fsm OF detect_signal IS
     SIGNAL start_idle, start_idle_next : STD_LOGIC;
     SIGNAL wait_counter, wait_counter_next : INTEGER range 0 to 2;
     SIGNAL done_write_reg, done_write_next : STD_LOGIC;
-    SHARED VARIABLE address_reg, address_next : UNSIGNED(15 DOWNTO 0);
+    SIGNAL address_reg, address_next : UNSIGNED(15 DOWNTO 0);
 
 BEGIN
     -- FSM core
@@ -49,7 +49,7 @@ BEGIN
                 signal_running_reg <= '0';
                 reset_reg <= '0';
                 wrt_reg <= '0';
-                address_reg := (OTHERS => '0');
+                address_reg <= (OTHERS => '0');
                 count <= 0;
                 start_idle <= '0';
                 wait_counter <= 0;
@@ -60,7 +60,7 @@ BEGIN
                 reset_reg <= reset_next;
                 wrt_reg <= wrt_next;
                 state <= next_state;
-                address_reg := address_next;
+                address_reg <= address_next;
                 count <= count_next;
                 start_idle <= start_idle_next;
                 wait_counter <= wait_counter_next;
@@ -69,7 +69,7 @@ BEGIN
     END PROCESS;
 
     -- FSM logic
-    PROCESS (state, signal_running_reg, wrt_reg, reset_reg, signal_out, signal_in, count, wait_counter, start_idle, encode_done)  
+    PROCESS (state, signal_running_reg, wrt_reg, reset_reg, signal_out, signal_in, count, wait_counter, start_idle, encode_done, address_reg)  
     BEGIN
 
         -- Default values
@@ -77,7 +77,7 @@ BEGIN
         wrt_next <= wrt_reg;
         reset_next <= reset_reg;
         signal_running_next <= signal_running_reg;
-        address_next := address_reg;
+        address_next <= address_reg;
         count_next <= count;
         start_idle_next <= start_idle;
         wait_counter_next <= wait_counter;
@@ -123,11 +123,11 @@ BEGIN
             WHEN RST =>
                 IF signal_in = '1' or reset_reg = '1' THEN
                     IF reset_reg = '1' and signal_in = '1' THEN
-                        IF address_reg = 65535 THEN
-                            address_next := (OTHERS => '0');
-                        ELSE
-                            address_next := address_reg + 1;
-                        END IF;
+                        --IF address_reg = 65535 THEN
+                        --    address_next <= (OTHERS => '0');
+                        --ELSE
+                            address_next <= address_reg + 1;
+                        --END IF;
                         next_state <= IDLE;
                         signal_running_next <= '0';
                         reset_next <= '0';
