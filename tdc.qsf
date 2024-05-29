@@ -63,31 +63,10 @@ set_location_assignment PIN_A3 -to clk
 set_location_assignment PIN_AM10 -to signal_in
 set_global_assignment -name ENABLE_SIGNALTAP OFF
 set_global_assignment -name USE_SIGNALTAP_FILE stp1.stp
-set_location_assignment PIN_AL10 -to clock_out
 set_global_assignment -name OPTIMIZATION_MODE BALANCED
 set_global_assignment -name ALLOW_REGISTER_RETIMING OFF
 
 
-set_global_assignment -name SDC_FILE SDC1.sdc
-set_global_assignment -name SOURCE_FILE tdc.qsf
-set_global_assignment -name SIGNALTAP_FILE stp1.stp
-set_global_assignment -name QSYS_FILE sap.qsys
-set_global_assignment -name VHDL_FILE pll.vhd -library pll
-set_global_assignment -name QIP_FILE pll.qip
-set_global_assignment -name SOURCE_FILE pll.cmp
-set_global_assignment -name SOURCE_FILE memory.cmp
-set_global_assignment -name VHDL_FILE handle_start.vhd
-set_global_assignment -name VHDL_FILE full_add.vhd
-set_global_assignment -name VHDL_FILE fifo.vhd
-set_global_assignment -name VHDL_FILE FDR.vhd
-set_global_assignment -name VHDL_FILE encoder.vhd
-set_global_assignment -name VHDL_FILE detect_signal.vhd
-set_global_assignment -name VHDL_FILE delay_line.vhd
-set_global_assignment -name VHDL_FILE channel.vhd
-set_global_assignment -name VHDL_FILE carry4.vhd
-set_global_assignment -name VHDL_FILE baudPack.vhd
-set_global_assignment -name VHDL_FILE baudgen.vhd
-set_global_assignment -name QIP_FILE memory.qip
 
 set_location_assignment FF_X41_Y26_N2 -to "delay_line:delay_line_inst|carry4:delayblock|interm[0]"
 set_location_assignment FF_X41_Y26_N5 -to "delay_line:delay_line_inst|carry4:delayblock|interm[1]"
@@ -1386,4 +1365,27 @@ set_global_assignment -name LL_ORIGIN X41_Y1 -section_id chain
 set_instance_assignment -name LL_MEMBER_OF chain -to "delay_line:delay_line_inst|carry4:delayblock|Sum_vector" -section_id chain
 
 set_instance_assignment -name LL_MEMBER_OF chain -to "delay_line:delay_line_inst|carry4:delayblock|interm" -section_id chain
+set_global_assignment -name SDC_FILE SDC1.sdc
+set_global_assignment -name SOURCE_FILE tdc.qsf
+set_global_assignment -name SIGNALTAP_FILE stp1.stp
+set_global_assignment -name VHDL_FILE pll.vhd -library pll
+set_global_assignment -name QIP_FILE pll.qip
+set_global_assignment -name SOURCE_FILE pll.cmp
+set_global_assignment -name SOURCE_FILE memory.cmp
+set_global_assignment -name VHDL_FILE handle_start.vhd
+set_global_assignment -name VHDL_FILE full_add.vhd
+set_global_assignment -name VHDL_FILE fifo.vhd
+set_global_assignment -name VHDL_FILE FDR.vhd
+set_global_assignment -name VHDL_FILE encoder.vhd
+set_global_assignment -name VHDL_FILE detect_signal.vhd
+set_global_assignment -name VHDL_FILE delay_line.vhd
+set_global_assignment -name VHDL_FILE channel.vhd
+set_global_assignment -name VHDL_FILE carry4.vhd
+set_global_assignment -name VHDL_FILE baudPack.vhd
+set_global_assignment -name VHDL_FILE baudgen.vhd
+set_global_assignment -name QIP_FILE memory.qip
+set_location_assignment PIN_C16 -to signal_out[1]
+set_location_assignment PIN_C14 -to signal_out[3]
+set_location_assignment PIN_C13 -to signal_out[5]
+set_location_assignment PIN_D16 -to signal_out[7]
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

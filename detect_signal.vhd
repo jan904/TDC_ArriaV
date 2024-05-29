@@ -11,9 +11,7 @@ ENTITY detect_signal IS
         clock : IN STD_LOGIC;
         start : IN STD_LOGIC;
         signal_in : IN STD_LOGIC;
-        interm_latch : IN STD_LOGIC_VECTOR(stages - 1 DOWNTO 0);
         signal_out : IN STD_LOGIC_VECTOR(n_output_bits - 1 DOWNTO 0);
-        encode_done : IN STD_LOGIC;
         address : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
         signal_running : OUT STD_LOGIC;
         reset : OUT STD_LOGIC;
@@ -32,11 +30,13 @@ ARCHITECTURE fsm OF detect_signal IS
     SIGNAL reset_reg, reset_next : STD_LOGIC;
     SIGNAL signal_running_reg, signal_running_next : STD_LOGIC;
     SIGNAL wrt_reg, wrt_next : STD_LOGIC;
-    SIGNAL count, count_reg, count_next : INTEGER range 0 to 1;
+    SIGNAL count, count_reg, count_next : INTEGER range 0 to 8;
     SIGNAL start_idle, start_idle_next : STD_LOGIC;
-    SIGNAL wait_counter, wait_counter_next : INTEGER range 0 to 2;
+    SIGNAL wait_counter, wait_counter_next : INTEGER range 0 to 12;
     SIGNAL done_write_reg, done_write_next : STD_LOGIC;
     SIGNAL address_reg, address_next : UNSIGNED(15 DOWNTO 0);
+
+    SIGNAL reset_count, reset_count_next : INTEGER range 0 to 24;
 
 BEGIN
     -- FSM core
@@ -53,6 +53,7 @@ BEGIN
                 count <= 0;
                 start_idle <= '0';
                 wait_counter <= 0;
+                reset_count <= 0;
 
             -- Update signals
             ELSE
@@ -64,12 +65,13 @@ BEGIN
                 count <= count_next;
                 start_idle <= start_idle_next;
                 wait_counter <= wait_counter_next;
+                reset_count <= reset_count_next;
             END IF;
         END IF;
     END PROCESS;
 
     -- FSM logic
-    PROCESS (state, signal_running_reg, wrt_reg, reset_reg, signal_out, signal_in, count, wait_counter, start_idle, encode_done, address_reg)  
+    PROCESS (state, signal_running_reg, wrt_reg, reset_reg, signal_out, signal_in, count, wait_counter, start_idle, address_reg, reset_count)  
     BEGIN
 
         -- Default values
@@ -81,39 +83,45 @@ BEGIN
         count_next <= count;
         start_idle_next <= start_idle;
         wait_counter_next <= wait_counter;
+        reset_count_next <= reset_count;
 
         CASE state IS
             WHEN IDLE =>
                 IF start_idle = '1' THEN
-                    IF signal_in = '0' THEN
-                        next_state <= DETECT_START;
+                    IF signal_in = '1' THEN
                         start_idle_next <= '0';
+                        next_state <= DETECT_START;   
                     ELSE
                         next_state <= IDLE;
                     END IF;
-                ELSIF signal_in = '1' THEN
-                    next_state <= IDLE;
+                ELSIF signal_in = '0' and start_idle = '0' THEN
                     start_idle_next <= '1';
+                    next_state <= IDLE;  
                 ELSE
                     next_state <= IDLE;
                 END IF;
                 
             WHEN DETECT_START =>
-                next_state <= ENCODE;
                 signal_running_next <= '1';
+                next_state <= ENCODE;
 
             WHEN ENCODE =>
-                IF wait_counter = 1 THEN
-                    next_state <= WRITE_FIFO;
-                    wait_counter_next <= 0;  
+                IF wait_counter = 12 THEN
+                    wait_counter_next <= 0; 
+                    next_state <= WRITE_FIFO;    
                 ELSE
                     wait_counter_next <= wait_counter + 1;
                     next_state <= ENCODE;
                 END IF;
 
             WHEN WRITE_FIFO =>
-                IF count = 1 THEN
+                IF count = 8 THEN
                     wrt_next <= '1';
+                    count_next <= count + 1;
+                    next_state <= WRITE_FIFO;
+                ELSIF count = 12 then
+                    count_next <= 0;
+                    wrt_next <= '0';
                     next_state <= RST;
                 ELSE
                     count_next <= count + 1;
@@ -121,28 +129,33 @@ BEGIN
                 END IF;
 
             WHEN RST =>
-                IF signal_in = '1' or reset_reg = '1' THEN
-                    IF reset_reg = '1' and signal_in = '1' THEN
-                        --IF address_reg = 65535 THEN
-                        --    address_next <= (OTHERS => '0');
-                        --ELSE
-                            address_next <= address_reg + 1;
-                        --END IF;
-                        next_state <= IDLE;
-                        signal_running_next <= '0';
-                        reset_next <= '0';
-                        count_next <= 0;
-                    ELSIF reset_reg = '0' THEN
-                        next_state <= RST;
+                IF signal_in = '0' or reset_count > 0 THEN
+                    IF reset_count = 20 THEN
+                        IF signal_in = '0' THEN
+                            reset_count_next <= 0;
+                            signal_running_next <= '0';
+                            reset_next <= '0';
+                            next_state <= IDLE;
+                        ELSE
+                            reset_count_next <= 20;
+                            next_state <= RST;
+                        END IF;
+                    ELSIF reset_count = 12 THEN
+                        reset_count_next <= reset_count + 1;
+                        address_next <= address_reg + 1;
                         reset_next <= '1';
+                        next_state <= RST;
+                    ELSE
+                        reset_count_next <= reset_count + 1;
+                        next_state <= RST;
                     END IF;
-                ELSE 
+                ELSE
                     next_state <= RST;
                 END IF;
-                wrt_next <= '0';
+                
                 
             WHEN OTHERS =>
-                next_state <= IDLE;
+                next_state <= RST;
         END CASE;
     END PROCESS;
 

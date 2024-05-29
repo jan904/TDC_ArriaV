@@ -53,3 +53,4 @@ with open('placement.qsf', 'a') as f:
 
 
 
+#set_false_path -from detect_signal:detect_signal_inst|* -to memory:memory_inst|altsyncram:altsyncram_component|altsyncram_a434:auto_generated|altsyncram_5013:altsyncram1* 

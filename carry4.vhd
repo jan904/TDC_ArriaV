@@ -25,7 +25,6 @@ ENTITY carry4 IS
         lock : IN STD_LOGIC;
         a, b : IN STD_LOGIC_VECTOR(stages-1 DOWNTO 0);
         Cin : IN STD_LOGIC;
-        Cout : OUT STD_LOGIC;
         Sum_vector : OUT STD_LOGIC_VECTOR(stages-1 DOWNTO 0)
     );
 END ENTITY carry4;
@@ -78,7 +77,5 @@ BEGIN
             END LOOP;
         END IF;
     END PROCESS;
-    
-    Cout <= total(stages);
 
 END ARCHITECTURE rtl;

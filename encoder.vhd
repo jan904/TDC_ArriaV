@@ -19,9 +19,7 @@ ENTITY encoder IS
     );
     PORT (
         clk : IN STD_LOGIC;
-        start_count : IN STD_LOGIC;
         thermometer : IN STD_LOGIC_VECTOR((n_bits_therm - 1) DOWNTO 0);
-        finished_count : OUT STD_LOGIC;
         count_bin : OUT STD_LOGIC_VECTOR((n_bits_bin - 1) DOWNTO 0)
     );
 END ENTITY encoder;
@@ -34,26 +32,19 @@ BEGIN
     PROCESS (clk)
         -- Variable to store the count
         VARIABLE count : unsigned(n_bits_bin - 1 DOWNTO 0); --:= (OTHERS => '0');
-        VARIABLE pos : INTEGER := 0;
-        VARIABLE found : BOOLEAN := FALSE;
 
     BEGIN
         count := (OTHERS => '0');
-        finished_count <= '1';
         -- Simply loop over the thermometer code and count the number of '1's
         IF rising_edge(clk) THEN    
             --IF start_count = '1' THEN 
-            FOR i IN 0 TO 511 LOOP
-                IF found = FALSE THEN
-                    pos := 511 - i;
-                    IF thermometer(pos) = '1' THEN
-                        count := to_unsigned(pos, count'LENGTH);
-                        found := TRUE;
+                FOR i IN 0 TO 511 LOOP
+                    IF thermometer(i) = '1' THEN
+                        count := count + 1;
                     END IF;
-                END IF;
-            END LOOP;
-            count_bin <= std_logic_vector(count);
+                END LOOP;
+                count_bin <= STD_LOGIC_VECTOR(count);
         END IF;
     END PROCESS;
-    
+
 END ARCHITECTURE rtl;
