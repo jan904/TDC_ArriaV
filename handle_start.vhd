@@ -17,6 +17,7 @@ USE ieee.std_logic_1164.ALL;
 ENTITY handle_start IS
     PORT (
         clk : IN STD_LOGIC;
+        pll_ready : IN STD_LOGIC;
         starting : OUT STD_LOGIC
     );
 END ENTITY handle_start;
@@ -43,14 +44,23 @@ BEGIN
     END PROCESS;
 
     -- fsm logic
-    PROCESS (starting_reg, current_state)
+    PROCESS (starting_reg, current_state, pll_ready)
     BEGIN
+
+        next_state <= current_state;
+
         -- Go to reset_state after starting. Stay in reset_state for one cycle
         -- and send starting signal. Then go to running_state and stay there sending no signal.s
         CASE current_state IS
             WHEN reset_state =>
-                starting_reg <= '1';
-                next_state <= running_state;
+                IF pll_ready = '1' THEN
+                    starting_reg <= '1';
+                    next_state <= running_state;
+                ELSE
+                    starting_reg <= '0';
+                    next_state <= reset_state;
+                END IF;
+                
             WHEN running_state =>
                 starting_reg <= '0';
                 next_state <= running_state;

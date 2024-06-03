@@ -23,7 +23,7 @@ END ENTITY detect_signal;
 ARCHITECTURE fsm OF detect_signal IS
 
     -- Define the states of the FSM
-    TYPE stype IS (IDLE, DETECT_START, ENCODE, WRITE_FIFO, RST);
+    TYPE stype IS (IDLE, DETECT_START, ENCODE, WRITE_FIFO, ADDRESS_UP, RST);
     SIGNAL state, next_state : stype;
 
     -- Signals used to store the values of the signals
@@ -122,11 +122,15 @@ BEGIN
                 ELSIF count = 12 then
                     count_next <= 0;
                     wrt_next <= '0';
-                    next_state <= RST;
+                    next_state <= ADDRESS_UP;
                 ELSE
                     count_next <= count + 1;
                     next_state <= WRITE_FIFO;
                 END IF;
+
+            WHEN ADDRESS_UP =>
+                address_next <= address_reg + 1;
+                next_state <= RST;
 
             WHEN RST =>
                 IF signal_in = '0' or reset_count > 0 THEN
@@ -142,7 +146,7 @@ BEGIN
                         END IF;
                     ELSIF reset_count = 12 THEN
                         reset_count_next <= reset_count + 1;
-                        address_next <= address_reg + 1;
+                        
                         reset_next <= '1';
                         next_state <= RST;
                     ELSE

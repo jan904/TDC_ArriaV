@@ -19,7 +19,7 @@ USE ieee.std_logic_arith.ALL;
 
 ENTITY channel IS
     GENERIC (
-        carry4_count : INTEGER := 128;
+        carry4_count : INTEGER :=  64;
         n_output_bits : INTEGER := 10
     );
     PORT (
@@ -40,6 +40,7 @@ ARCHITECTURE rtl OF channel IS
     SIGNAL address : STD_LOGIC_VECTOR(15 DOWNTO 0) := (OTHERS => '0');
 
     SIGNAL pll_clock : STD_LOGIC;
+    SIGNAL pll_locked : STD_LOGIC;
  
     -- Component declarations
 
@@ -47,6 +48,7 @@ ARCHITECTURE rtl OF channel IS
 		port (
 			refclk   : in  std_logic; -- clk
 			rst      : in  std_logic := 'X'; -- reset
+            locked   : out std_logic := 'X'; -- locked
 			outclk_0 : out std_logic         -- clk
 		);
 	end component pll;
@@ -105,6 +107,7 @@ ARCHITECTURE rtl OF channel IS
     COMPONENT handle_start IS
         PORT (
             clk : IN STD_LOGIC;
+            pll_ready : IN STD_LOGIC;
             starting : OUT STD_LOGIC
         );
     END COMPONENT handle_start;
@@ -137,6 +140,7 @@ BEGIN
     port map (
         refclk => clk,
         rst => reset_after_start,
+        locked => pll_locked,
         outclk_0 => pll_clock
     );
 
@@ -153,6 +157,7 @@ BEGIN
     handle_start_inst : handle_start
     PORT MAP(
         clk => clk,
+        pll_ready => pll_locked,
         starting => reset_after_start
     );
 

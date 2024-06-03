@@ -1368,7 +1368,6 @@ set_instance_assignment -name LL_MEMBER_OF chain -to "delay_line:delay_line_inst
 set_global_assignment -name SDC_FILE SDC1.sdc
 set_global_assignment -name SOURCE_FILE tdc.qsf
 set_global_assignment -name SIGNALTAP_FILE stp1.stp
-set_global_assignment -name VHDL_FILE pll.vhd -library pll
 set_global_assignment -name QIP_FILE pll.qip
 set_global_assignment -name SOURCE_FILE pll.cmp
 set_global_assignment -name SOURCE_FILE memory.cmp
