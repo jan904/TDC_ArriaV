@@ -1,6 +1,7 @@
 elements = 512
 y_start = 26
 
+'''
 with open('placement.qsf', 'w') as f:
     y = y_start
     i = 0
@@ -19,6 +20,7 @@ with open('placement.qsf', 'w') as f:
 
         for ff in [ff1, ff2, ff3, ff4, ff5, ff6, '\n']:
             f.write(ff)
+'''
 
 with open('placement.qsf', 'a') as f:
         y = y_start
@@ -33,12 +35,12 @@ with open('placement.qsf', 'a') as f:
                 ff1 = ''
                 ff2 = ''
 
-            if j >= 0:
-                ff3 = 'set_location_assignment FF_X41_Y' + str(y) + '_N' + str(i+1) + ' -to "delay_line:delay_line_inst|carry4:delayblock|Sum_vector[' + str(j) + ']" \n'
-                ff4 = 'set_location_assignment FF_X41_Y' + str(y) + '_N' + str(i+4) + ' -to "delay_line:delay_line_inst|carry4:delayblock|Sum_vector[' + str(j+1) + ']" \n'
-            else:
-                ff3 = ''
-                ff4 = ''
+            #if j >= 0:
+                #ff3 = 'set_location_assignment FF_X41_Y' + str(y) + '_N' + str(i+1) + ' -to "delay_line:delay_line_inst|carry4:delayblock|Sum_vector[' + str(j) + ']" \n'
+                #ff4 = 'set_location_assignment FF_X41_Y' + str(y) + '_N' + str(i+4) + ' -to "delay_line:delay_line_inst|carry4:delayblock|Sum_vector[' + str(j+1) + ']" \n'
+            #else:
+                #ff3 = ''
+                #ff4 = ''
 
             i += 6
             k += 6
@@ -48,7 +50,7 @@ with open('placement.qsf', 'a') as f:
                 k = 0
                 y -= 1
 
-            for ff in [ff1, ff2, ff3, ff4, '\n']:
+            for ff in [ff1, ff2, '\n']:
                 f.write(ff)
 
 

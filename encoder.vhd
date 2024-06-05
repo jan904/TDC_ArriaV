@@ -38,7 +38,7 @@ BEGIN
         -- Simply loop over the thermometer code and count the number of '1's
         IF rising_edge(clk) THEN    
             --IF start_count = '1' THEN 
-                FOR i IN 0 TO 255 LOOP
+                FOR i IN 0 TO n_bits_therm-1 LOOP
                     IF thermometer(i) = '1' THEN
                         count := count + 1;
                     END IF;

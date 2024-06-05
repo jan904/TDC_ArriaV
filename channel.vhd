@@ -39,6 +39,8 @@ ARCHITECTURE rtl OF channel IS
 
     SIGNAL address : STD_LOGIC_VECTOR(15 DOWNTO 0) := (OTHERS => '0');
 
+    SIGNAL lock_interm : STD_LOGIC;
+
     SIGNAL pll_clock : STD_LOGIC;
     SIGNAL pll_locked : STD_LOGIC;
  
@@ -67,6 +69,7 @@ ARCHITECTURE rtl OF channel IS
         );
         PORT (
             reset : IN STD_LOGIC;
+            lock_interm : IN STD_LOGIC;
             trigger : IN STD_LOGIC;
             clock : IN STD_LOGIC;
             signal_running : IN STD_LOGIC;
@@ -95,8 +98,6 @@ ARCHITECTURE rtl OF channel IS
             clock : IN STD_LOGIC;
             start : IN STD_LOGIC;
             signal_in : IN STD_LOGIC;
-            signal_out : IN STD_LOGIC_VECTOR(n_output_bits - 1 DOWNTO 0);
-            signal_running : OUT STD_LOGIC;
             address : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
             reset : OUT STD_LOGIC;
             wrt : OUT STD_LOGIC
@@ -123,6 +124,17 @@ ARCHITECTURE rtl OF channel IS
         );
     end component;
 
+    COMPONENT freeze_fsm IS
+        PORT (
+            clock : IN STD_LOGIC;
+            signal_in : IN STD_LOGIC;
+            start : IN STD_LOGIC;
+            reset : IN STD_LOGIC;
+            lock_interm : OUT STD_LOGIC;
+            signal_running : OUT STD_LOGIC
+        );
+    END COMPONENT freeze_fsm;
+
     ATTRIBUTE keep : boolean;
     ATTRIBUTE keep OF bin_output : SIGNAL IS TRUE;
 
@@ -148,7 +160,7 @@ BEGIN
     PORT MAP(
         address => address,
         clock => clk,
-        data => bin_output(7 DOWNTO 0),
+        data => bin_output(8 DOWNTO 1),
         wren => wr_en,
         q => open
     );
@@ -168,12 +180,23 @@ BEGIN
     )
     PORT MAP(
         reset => reset_after_signal,
+        lock_interm => lock_interm,
         signal_running => busy,
         trigger => signal_in,
         clock => pll_clock,
         therm_code => therm_code
     );
 	 
+    freeze_fsm_inst : freeze_fsm
+    PORT MAP(
+        clock => pll_clock,
+        signal_in => signal_in,
+        start => reset_after_start,
+        reset => reset_after_signal,
+        lock_interm => lock_interm,
+        signal_running => busy
+    );
+
     -- logic to detect signal and handle current state of TDC
     detect_signal_inst : detect_signal
     GENERIC MAP(
@@ -181,11 +204,9 @@ BEGIN
         n_output_bits => n_output_bits
     )
     PORT MAP(
-        clock => pll_clock,
+        clock => clk,
         start => reset_after_start,
         signal_in => signal_in,
-        signal_out => bin_output,
-        signal_running => busy,
         reset => reset_after_signal,
         address => address,
         wrt => wr_en

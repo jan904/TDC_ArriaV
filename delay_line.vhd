@@ -32,6 +32,7 @@ ENTITY delay_line IS
     );
     PORT (
         reset : IN STD_LOGIC;
+        lock_interm : IN STD_LOGIC;
         trigger : IN STD_LOGIC;
         clock : IN STD_LOGIC;
         signal_running : IN STD_LOGIC;
@@ -52,6 +53,7 @@ ARCHITECTURE rtl OF delay_line IS
         PORT (
             clk : IN STD_LOGIC;
             rst : IN STD_LOGIC;
+            lock_interm : IN STD_LOGIC;
             lock : IN STD_LOGIC;
             a, b : IN STD_LOGIC_VECTOR(stages-1 DOWNTO 0);
             Cin : IN STD_LOGIC;
@@ -69,6 +71,7 @@ BEGIN
     PORT MAP(
         clk => clock,
         rst => reset,
+        lock_interm => lock_interm,
         lock => signal_running,
         a => (OTHERS => '0'), --x"00000000000000000000000000000000", --zeros(3 DOWNTO 0),
         b => (OTHERS => '1'), --x"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", --ones(3 DOWNTO 0),
