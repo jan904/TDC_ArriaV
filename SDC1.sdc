@@ -5,4 +5,4 @@ derive_clock_uncertainty
 
 set_false_path -from [get_ports {signal_in}]
 
-set_false_path -from delay_line:delay_line_inst|carry4:delayblock|Sum_vector* -to encoder:encoder_inst|*
+set_false_path -from detect_signal:detect_signal_inst|reset_reg -to delay_line:delay_line_inst|carry4:delayblock|*

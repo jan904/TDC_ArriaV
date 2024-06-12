@@ -191,7 +191,7 @@ BEGIN
         stages => carry4_count * 4
     )
     PORT MAP(
-        reset => rst_chain,
+        reset => reset_after_signal,
         lock_interm => lock_interm,
         signal_running => busy,
         trigger => signal_in,
