@@ -28,6 +28,8 @@ ENTITY channel IS
         signal_out : OUT STD_LOGIC_VECTOR(n_output_bits - 1 DOWNTO 0)
     );
 END ENTITY channel;
+
+
 ARCHITECTURE rtl OF channel IS
 
     SIGNAL reset_after_start : STD_LOGIC;
@@ -39,7 +41,11 @@ ARCHITECTURE rtl OF channel IS
 
     SIGNAL address : STD_LOGIC_VECTOR(15 DOWNTO 0) := (OTHERS => '0');
 
+    SIGNAL parity : STD_LOGIC;
+    SIGNAL rounds : STD_LOGIC_VECTOR(7 DOWNTO 0);
+
     SIGNAL lock_interm : STD_LOGIC;
+    SIGNAL rst_chain : STD_LOGIC;
 
     SIGNAL pll_clock : STD_LOGIC;
     SIGNAL pll_locked : STD_LOGIC;
@@ -73,6 +79,8 @@ ARCHITECTURE rtl OF channel IS
             trigger : IN STD_LOGIC;
             clock : IN STD_LOGIC;
             signal_running : IN STD_LOGIC;
+            parity : OUT STD_LOGIC;
+            rounds : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
             therm_code : OUT STD_LOGIC_VECTOR(stages - 1 DOWNTO 0)
         );
     END COMPONENT delay_line;
@@ -85,6 +93,7 @@ ARCHITECTURE rtl OF channel IS
         PORT (
             clk : IN STD_LOGIC;
             thermometer : IN STD_LOGIC_VECTOR((n_bits_therm - 1) DOWNTO 0);
+            parity : IN STD_LOGIC;
             count_bin : OUT STD_LOGIC_VECTOR(n_bits_bin - 1 DOWNTO 0)
         );
     END COMPONENT encoder;
@@ -130,6 +139,7 @@ ARCHITECTURE rtl OF channel IS
             signal_in : IN STD_LOGIC;
             start : IN STD_LOGIC;
             reset : IN STD_LOGIC;
+            rst_chain : OUT STD_LOGIC;
             lock_interm : OUT STD_LOGIC;
             signal_running : OUT STD_LOGIC
         );
@@ -138,9 +148,11 @@ ARCHITECTURE rtl OF channel IS
     ATTRIBUTE keep : boolean;
     ATTRIBUTE keep OF bin_output : SIGNAL IS TRUE;
 
+
 BEGIN
 
     signal_out <= bin_output;
+    --rounds_out <= rounds;
     --data <= bin_output(8 DOWNTO 1);
 
     --sap_inst : sap
@@ -160,7 +172,7 @@ BEGIN
     PORT MAP(
         address => address,
         clock => clk,
-        data => bin_output(8 DOWNTO 1),
+        data => rounds(0) & bin_output(7 DOWNTO 1),
         wren => wr_en,
         q => open
     );
@@ -179,11 +191,13 @@ BEGIN
         stages => carry4_count * 4
     )
     PORT MAP(
-        reset => reset_after_signal,
+        reset => rst_chain,
         lock_interm => lock_interm,
         signal_running => busy,
         trigger => signal_in,
         clock => pll_clock,
+        parity => parity,
+        rounds => rounds,
         therm_code => therm_code
     );
 	 
@@ -193,6 +207,7 @@ BEGIN
         signal_in => signal_in,
         start => reset_after_start,
         reset => reset_after_signal,
+        rst_chain => rst_chain,
         lock_interm => lock_interm,
         signal_running => busy
     );
@@ -221,6 +236,7 @@ BEGIN
     PORT MAP(
         clk => clk,
         thermometer => therm_code,
+        parity => parity,
         count_bin => bin_output
     );
     --signal_out <= bin_output;

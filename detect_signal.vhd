@@ -80,13 +80,13 @@ BEGIN
                 END IF;
                 
             WHEN ENCODE =>
-                --IF wait_counter = 2 THEN
+                IF wait_counter = 2 THEN
                     wait_counter_next <= 0; 
                     next_state <= WRITE_FIFO;    
-                --ELSE
-                --    wait_counter_next <= wait_counter + 1;
-                --    next_state <= ENCODE;
-                --END IF;
+                ELSE
+                    wait_counter_next <= wait_counter + 1;
+                    next_state <= ENCODE;
+                END IF;
 
             WHEN WRITE_FIFO =>
                 IF count = 0 THEN

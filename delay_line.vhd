@@ -36,6 +36,8 @@ ENTITY delay_line IS
         trigger : IN STD_LOGIC;
         clock : IN STD_LOGIC;
         signal_running : IN STD_LOGIC;
+        parity : OUT STD_LOGIC;
+        rounds : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
         therm_code : OUT STD_LOGIC_VECTOR(stages - 1 DOWNTO 0)
     );
 END delay_line;
@@ -44,7 +46,8 @@ END delay_line;
 ARCHITECTURE rtl OF delay_line IS
 
     -- Raw output of TDL
-    SIGNAL sum : STD_LOGIC_VECTOR(stages - 1 DOWNTO 0);
+    SIGNAL input : STD_LOGIC;
+    SIGNAL carry : STD_LOGIC := '0';
 
     COMPONENT carry4
         GENERIC (
@@ -57,11 +60,33 @@ ARCHITECTURE rtl OF delay_line IS
             lock : IN STD_LOGIC;
             a, b : IN STD_LOGIC_VECTOR(stages-1 DOWNTO 0);
             Cin : IN STD_LOGIC;
+            Cout : OUT STD_LOGIC;
             Sum_vector : OUT STD_LOGIC_VECTOR(stages-1 DOWNTO 0)
         );
     END COMPONENT;
-	
+
+    COMPONENT count_rounds IS
+        PORT (
+            rst : IN STD_LOGIC;
+            carry : IN STD_LOGIC;
+            parity : OUT STD_LOGIC;
+            count : OUT STD_LOGIC_VECTOR(7 DOWNTO 0)
+        );
+    END COMPONENT;
+
+
 BEGIN
+
+    input <= trigger and not carry;
+
+    -- Count the number of rounds
+    count_rounds_inst : count_rounds
+    PORT MAP(
+        rst => reset,
+        carry => carry,
+        parity => parity,
+        count => rounds
+    );
 
     -- Instantiate the carry4 cells
     delayblock : carry4
@@ -75,7 +100,8 @@ BEGIN
         lock => signal_running,
         a => (OTHERS => '0'), --x"00000000000000000000000000000000", --zeros(3 DOWNTO 0),
         b => (OTHERS => '1'), --x"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", --ones(3 DOWNTO 0),
-        Cin => trigger,
+        Cin => input,
+        Cout => carry,
         Sum_vector => therm_code(stages-1 DOWNTO 0)
     );
 

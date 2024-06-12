@@ -1,5 +1,5 @@
-elements = 512
-y_start = 26
+elements = 256
+y_start = 20
 
 '''
 with open('placement.qsf', 'w') as f:

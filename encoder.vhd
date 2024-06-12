@@ -20,6 +20,7 @@ ENTITY encoder IS
     PORT (
         clk : IN STD_LOGIC;
         thermometer : IN STD_LOGIC_VECTOR((n_bits_therm - 1) DOWNTO 0);
+        parity : IN STD_LOGIC;
         count_bin : OUT STD_LOGIC_VECTOR((n_bits_bin - 1) DOWNTO 0)
     );
 END ENTITY encoder;
@@ -43,7 +44,12 @@ BEGIN
                         count := count + 1;
                     END IF;
                 END LOOP;
-                count_bin <= STD_LOGIC_VECTOR(count);
+
+                IF parity = '1' THEN
+                    count_bin <= STD_LOGIC_VECTOR(count);
+                ELSE
+                    count_bin <= STD_LOGIC_VECTOR(n_bits_therm - count);
+                END IF;
         END IF;
     END PROCESS;
 
