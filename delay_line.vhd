@@ -65,28 +65,7 @@ ARCHITECTURE rtl OF delay_line IS
         );
     END COMPONENT;
 
-    COMPONENT count_rounds IS
-        PORT (
-            rst : IN STD_LOGIC;
-            carry : IN STD_LOGIC;
-            parity : OUT STD_LOGIC;
-            count : OUT STD_LOGIC_VECTOR(7 DOWNTO 0)
-        );
-    END COMPONENT;
-
-
 BEGIN
-
-    input <= trigger and not carry;
-
-    -- Count the number of rounds
-    count_rounds_inst : count_rounds
-    PORT MAP(
-        rst => reset,
-        carry => carry,
-        parity => parity,
-        count => rounds
-    );
 
     -- Instantiate the carry4 cells
     delayblock : carry4
@@ -98,10 +77,9 @@ BEGIN
         rst => reset,
         lock_interm => lock_interm,
         lock => signal_running,
-        a => (OTHERS => '0'), --x"00000000000000000000000000000000", --zeros(3 DOWNTO 0),
-        b => (OTHERS => '1'), --x"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", --ones(3 DOWNTO 0),
-        Cin => input,
-        Cout => carry,
+        a => (OTHERS => '0'), 
+        b => (OTHERS => '1'), 
+        Cin => trigger,
         Sum_vector => therm_code(stages-1 DOWNTO 0)
     );
 
